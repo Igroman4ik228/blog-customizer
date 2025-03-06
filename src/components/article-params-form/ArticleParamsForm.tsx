@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { FormEvent, useRef, useState } from 'react';
 import {
 	ArticleStateType,
 	backgroundColors,
@@ -13,6 +13,7 @@ import { ArrowButton } from 'src/ui/arrow-button';
 import { Button } from 'src/ui/button';
 import { RadioGroup } from 'src/ui/radio-group';
 import { Select } from 'src/ui/select';
+import { useOutsideClickClose } from 'src/ui/select/hooks/useOutsideClickClose';
 import { Separator } from 'src/ui/separator';
 import { Text } from 'src/ui/text';
 import styles from './ArticleParamsForm.module.scss';
@@ -30,24 +31,14 @@ export const ArticleParamsForm = ({
 	const [formState, setFormState] = useState<ArticleStateType>(currentState);
 	const asideRef = useRef<HTMLDivElement>(null);
 
+	useOutsideClickClose({
+		isOpen: isOpen,
+		rootRef: asideRef,
+		onClose: () => setIsOpen(false),
+		onChange: setIsOpen,
+	});
+
 	const toggleOpen = () => setIsOpen((prev) => !prev);
-
-	// Обработчик клика вне формы
-	const handleClickOutside = (event: MouseEvent) => {
-		if (
-			asideRef.current &&
-			event.target instanceof Node &&
-			!asideRef.current.contains(event.target)
-		)
-			setIsOpen(false);
-	};
-
-	// Добавляем/убираем слушатель событий при открытии/закрытии формы
-	useEffect(() => {
-		if (!isOpen) return;
-		document.addEventListener('mousedown', handleClickOutside);
-		return () => document.removeEventListener('mousedown', handleClickOutside);
-	}, [isOpen]);
 
 	const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -63,9 +54,7 @@ export const ArticleParamsForm = ({
 	const updateFormState = (
 		key: keyof ArticleStateType,
 		value: ArticleStateType[keyof ArticleStateType]
-	) => {
-		setFormState((prev) => ({ ...prev, [key]: value }));
-	};
+	) => setFormState((prev) => ({ ...prev, [key]: value }));
 
 	return (
 		<>
@@ -80,13 +69,9 @@ export const ArticleParamsForm = ({
 					onSubmit={handleSubmit}
 					onReset={handleReset}
 					aria-label='Форма настройки параметров статьи'>
-					<Text
-						children='Задайте параметры'
-						as='h2'
-						size={31}
-						weight={800}
-						uppercase
-					/>
+					<Text as='h2' size={31} weight={800} uppercase>
+						Задайте параметры
+					</Text>
 					<Select
 						selected={formState.fontFamilyOption}
 						options={fontFamilyOptions}
